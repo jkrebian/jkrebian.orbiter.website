@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "orbiter-cli": "^0.9.8"
+  }
+}

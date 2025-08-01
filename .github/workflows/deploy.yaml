@@ -1,0 +1,70 @@
+name: Deploy Hugo Site
+
+on:
+ push:
+   branches:
+     - main
+   pull_request:
+
+jobs:
+ deploy:
+   runs-on: ubuntu-latest
+ permissions:
+   contents: write
+   env:
+     HUGO_CACHEDIR: /tmp/hugo_cache
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.ref }}
+   steps:
+     - uses: actions/checkout@v4
+       with:
+         submodules: true  # Fetch Hugo themes (true OR recursive)
+         fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+     - name: Setup Hugo
+       uses: peaceiris/actions-hugo@v4
+       with:
+         hugo-version: 'latest'
+             extended: true
+
+    - uses: actions/setup-node@v4
+      with:
+         node-version: 'latest'
+                cache: 'npm'
+         cache-dependency-path: '**/package-lock.json'
+
+     - uses: actions/cache@v4
+       with:
+         path: ${{ env.HUGO_CACHEDIR }} # <- Use the same env variable just right here
+         key: ${{ runner.os }}-hugomod-${{ hashFiles('**/go.sum') }}
+         restore-keys: |
+           ${{ runner.os }}-hugomod-
+
+     - name: Build
+       run: npm ci
+       run: hugo --minify
+
+     - name: Deploy
+       uses: peaceiris/actions-gh-pages@v4
+       if: github.ref == 'refs/heads/main'
+       with:
+         github_token: ${{ secrets.ACTIONS_DEPLOY_KEY }} # ssh deploy key
+       # github_token: ${{ secrets.PERSONAL_TOKEN }} # personal access token
+       # github_token: ${{ secrets.GITHUB_TOKEN }}
+         publish_branch: master # gh-pages or master or another branch
+         publish_dir: ./public
+         cname: jkrebian.orbiter.website
+         enable_jekyll: true
+         user_name: 'jkrebian'
+         user_email: 'sirchanmp@hacari.net'
+
+    - name: Deploy to Orbiter
+      uses: orbiterhost/orbiter-github-actions@v0.1.4 # update with latest version
+      with:
+         project-name: "blogs"
+         api-key: ${{ secrets.ORBITER_API_KEY }}
+         node-version: "latest"
+         build-command: "hugo"
+         build-directory: "./public"
+
+     run: npx orbiter-cli update -d blogs public

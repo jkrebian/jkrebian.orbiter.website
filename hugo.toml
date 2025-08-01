@@ -1,0 +1,4 @@
+baseURL = 'https://jkrebian.orbiter.website/'
+languageCode = 'en-us'
+title = 'John Krebian On ORBITER'
+theme = 'ananke'

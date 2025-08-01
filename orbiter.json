@@ -1,0 +1,6 @@
+{
+  "siteId": "61dad880-edba-407d-af8b-5bb5688c8e00",
+  "domain": "jkrebian",
+  "buildCommand": "hugo",
+  "buildDir": "public"
+}
